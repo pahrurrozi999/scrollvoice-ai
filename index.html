@@ -222,8 +222,8 @@
 
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const ALLOWED_COMMANDS = new Set(["scroll", "back", "stop", "continue", "auto", "off"]);
-      const MIN_CONFIDENCE = 0.65;
-      const COMMAND_COOLDOWN_MS = 1200;
+      const MIN_CONFIDENCE = 0.60;
+      const COMMAND_COOLDOWN_MS = 450;
 
       let recognition = null;
       let sessionActive = false;
@@ -331,7 +331,7 @@
           try { recognition.start(); } catch (_) {
             // Browser mungkin masih menyelesaikan sesi sebelumnya. Coba lagi lewat onend berikutnya.
           }
-        }, 400);
+        }, 180);
       }
 
       function createRecognition() {
