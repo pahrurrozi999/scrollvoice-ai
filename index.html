@@ -167,7 +167,7 @@
             <span class="listen-icon" aria-hidden="true">◉</span>
             <span>Mulai Mendengarkan</span>
           </button>
-          <button class="mute-button" id="mute-button" type="button">Matikan</button>
+          <button class="mute-button" id="mute-button" type="button">Off</button>
         </div>
 
         <div class="section-label">
@@ -179,23 +179,23 @@
           <button class="control" type="button" data-command="scroll">
             <span class="control-symbol" aria-hidden="true">↓</span><span class="control-label">Scroll</span>
           </button>
-          <button class="control" type="button" data-command="balik">
-            <span class="control-symbol" aria-hidden="true">↑</span><span class="control-label">Balik</span>
+          <button class="control" type="button" data-command="back">
+            <span class="control-symbol" aria-hidden="true">↑</span><span class="control-label">Back</span>
           </button>
           <button class="control stop" type="button" data-command="stop">
             <span class="control-symbol" aria-hidden="true">■</span><span class="control-label">Stop</span>
           </button>
-          <button class="control" type="button" data-command="lanjut">
-            <span class="control-symbol" aria-hidden="true">▶</span><span class="control-label">Lanjut</span>
+          <button class="control" type="button" data-command="continue">
+            <span class="control-symbol" aria-hidden="true">▶</span><span class="control-label">Continue</span>
           </button>
         </div>
 
         <div class="auto-row">
           <div class="auto-description">
             <span class="control-symbol" aria-hidden="true">↻</span>
-            <span><span class="control-label">Otomatis</span><span class="auto-caption">Mode uji · perlu integrasi Android untuk scroll aplikasi lain</span></span>
+            <span><span class="control-label">Auto</span><span class="auto-caption">Mode uji · perlu integrasi Android untuk scroll aplikasi lain</span></span>
           </div>
-          <label class="toggle" aria-label="Otomatis">
+          <label class="toggle" aria-label="Auto">
             <input id="auto-toggle" type="checkbox" role="switch" aria-checked="false">
             <span class="toggle-track" aria-hidden="true"></span>
           </label>
@@ -221,8 +221,8 @@
       const feedback = document.querySelector("#demo-feedback");
 
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const ALLOWED_COMMANDS = new Set(["scroll", "balik", "stop", "lanjut", "otomatis", "matikan"]);
-      const MIN_CONFIDENCE = 0.82;
+      const ALLOWED_COMMANDS = new Set(["scroll", "back", "stop", "continue", "auto", "off"]);
+      const MIN_CONFIDENCE = 0.65;
       const COMMAND_COOLDOWN_MS = 1200;
 
       let recognition = null;
@@ -248,7 +248,7 @@
 
       function normalizeTranscript(value) {
         return String(value || "")
-          .toLocaleLowerCase("id-ID")
+          .toLocaleLowerCase("en-US")
           .normalize("NFKC")
           .trim()
           .replace(/[.!?,;:]+$/u, "")
@@ -266,7 +266,7 @@
         autoToggle.checked = autoMode;
         autoToggle.setAttribute("aria-checked", String(autoMode));
         setFeedback(fromVoice
-          ? (autoMode ? "Perintah Otomatis dikenali. Mode otomatis aktif; kontrol aplikasi lain belum tersedia." : "Mode otomatis dimatikan.")
+          ? (autoMode ? "Perintah Auto dikenali. Mode otomatis aktif; kontrol aplikasi lain belum tersedia." : "Mode otomatis dimatikan.")
           : (autoMode ? "Mode otomatis aktif untuk uji antarmuka; belum menggeser aplikasi lain." : "Mode otomatis dimatikan."));
       }
 
@@ -291,34 +291,34 @@
         lastCommandAt = now;
 
         if (!ALLOWED_COMMANDS.has(command)) return;
-        if (paused && command !== "lanjut" && command !== "matikan") return;
+        if (paused && command !== "continue" && command !== "off") return;
 
         switch (command) {
           case "scroll":
             setFeedback("Perintah Scroll dikenali. Menggeser TikTok memerlukan integrasi Android.");
             break;
-          case "balik":
-            setFeedback("Perintah Balik dikenali. Kembali ke video sebelumnya memerlukan integrasi Android.");
+          case "back":
+            setFeedback("Perintah Back dikenali. Kembali ke video sebelumnya memerlukan integrasi Android.");
             break;
           case "stop":
             paused = true;
-            setStatus("Dijeda", "Mikrofon tetap aktif; hanya Lanjut atau Matikan yang diterima.", false);
-            setFeedback("Perintah Stop dikenali. Perintah lain diabaikan sampai Lanjut diucapkan.");
+            setStatus("Dijeda", "Mikrofon tetap aktif; hanya Continue atau Off yang diterima.", false);
+            setFeedback("Perintah Stop dikenali. Perintah lain diabaikan sampai Continue diucapkan.");
             break;
-          case "lanjut":
+          case "continue":
             if (paused) {
               paused = false;
-              setStatus("Mendengarkan", "Hanya enam kata perintah dengan skor keyakinan cukup yang diterima.", true);
-              setFeedback("Perintah Lanjut dikenali. Mendengarkan dilanjutkan.");
+              setStatus("Mendengarkan", "Hanya enam kata perintah bahasa Inggris dengan skor keyakinan cukup yang diterima.", true);
+              setFeedback("Perintah Continue dikenali. Mendengarkan dilanjutkan.");
             } else {
-              setFeedback("Perintah Lanjut dikenali. Sesi sudah aktif.");
+              setFeedback("Perintah Continue dikenali. Sesi sudah aktif.");
             }
             break;
-          case "otomatis":
+          case "auto":
             updateAutoState(!autoMode, true);
             break;
-          case "matikan":
-            stopSession("Perintah Matikan dikenali. Sesi diakhiri.");
+          case "off":
+            stopSession("Perintah Off dikenali. Sesi diakhiri.");
             break;
         }
       }
@@ -331,12 +331,12 @@
           try { recognition.start(); } catch (_) {
             // Browser mungkin masih menyelesaikan sesi sebelumnya. Coba lagi lewat onend berikutnya.
           }
-        }, 650);
+        }, 400);
       }
 
       function createRecognition() {
         recognition = new SpeechRecognition();
-        recognition.lang = "id-ID";
+        recognition.lang = "en-US";
         recognition.continuous = true;
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
@@ -345,7 +345,7 @@
           if (!sessionActive) return;
           setStatus(
             paused ? "Dijeda" : "Mendengarkan",
-            paused ? "Hanya Lanjut atau Matikan yang diterima." : "Hanya enam kata perintah yang cocok persis akan diproses.",
+            paused ? "Hanya Continue atau Off yang diterima." : "Hanya enam kata perintah yang cocok persis akan diproses.",
             !paused
           );
         };
@@ -358,12 +358,12 @@
             const alternative = result[0];
             const transcript = normalizeTranscript(alternative.transcript);
 
-            // Harus satu kata persis. Kalimat, kata tambahan, dan ucapan lain dibuang diam-diam.
+            // Harus satu kata Inggris persis. Kalimat, kata tambahan, dan suara lain dibuang diam-diam.
             if (!ALLOWED_COMMANDS.has(transcript)) continue;
-            // Skor rendah/tidak tersedia diabaikan agar lebih tahan terhadap audio latar.
+            // Ambang 0.65 membantu menerima perintah yang diucapkan jelas tanpa menerima skor rendah; pencocokan kata persis tetap wajib.
             if (!isConfidentEnough(alternative)) continue;
             // Saat dijeda, hanya dua perintah untuk melanjutkan atau mengakhiri sesi yang berlaku.
-            if (paused && transcript !== "lanjut" && transcript !== "matikan") continue;
+            if (paused && transcript !== "continue" && transcript !== "off") continue;
 
             handleCommand(transcript);
           }
