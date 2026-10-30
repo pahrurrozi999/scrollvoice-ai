@@ -221,9 +221,18 @@
       const feedback = document.querySelector("#demo-feedback");
 
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      // Alias harus berupa satu kata utuh. Ucapan berbentuk kalimat atau kata lain tetap diabaikan.
+      const COMMAND_ALIASES = new Map([
+        ["scroll", "scroll"], ["skrol", "scroll"], ["scrolling", "scroll"],
+        ["back", "back"], ["bek", "back"], ["bak", "back"],
+        ["stop", "stop"], ["setop", "stop"], ["top", "stop"], ["sekop", "stop"],
+        ["continue", "continue"], ["kontinyu", "continue"], ["continues", "continue"],
+        ["auto", "auto"], ["otomatis", "auto"], ["otomatik", "auto"],
+        ["off", "off"], ["of", "off"], ["ap", "off"]
+      ]);
       const ALLOWED_COMMANDS = new Set(["scroll", "back", "stop", "continue", "auto", "off"]);
-      const MIN_CONFIDENCE = 0.60;
-      const COMMAND_COOLDOWN_MS = 450;
+      const MIN_CONFIDENCE = 0.65;
+      const COMMAND_COOLDOWN_MS = 1200;
 
       let recognition = null;
       let sessionActive = false;
@@ -331,7 +340,7 @@
           try { recognition.start(); } catch (_) {
             // Browser mungkin masih menyelesaikan sesi sebelumnya. Coba lagi lewat onend berikutnya.
           }
-        }, 180);
+        }, 400);
       }
 
       function createRecognition() {
@@ -357,15 +366,16 @@
 
             const alternative = result[0];
             const transcript = normalizeTranscript(alternative.transcript);
+            const command = COMMAND_ALIASES.get(transcript);
 
-            // Harus satu kata Inggris persis. Kalimat, kata tambahan, dan suara lain dibuang diam-diam.
-            if (!ALLOWED_COMMANDS.has(transcript)) continue;
-            // Ambang 0.65 membantu menerima perintah yang diucapkan jelas tanpa menerima skor rendah; pencocokan kata persis tetap wajib.
+            // Hanya satu kata terdaftar atau alias satu kata. Kalimat, kata tambahan, dan suara lain diabaikan diam-diam.
+            if (!command || !ALLOWED_COMMANDS.has(command)) continue;
+            // Skor rendah/tidak tersedia diabaikan; alias tidak melonggarkan ambang keyakinan.
             if (!isConfidentEnough(alternative)) continue;
-            // Saat dijeda, hanya dua perintah untuk melanjutkan atau mengakhiri sesi yang berlaku.
-            if (paused && transcript !== "continue" && transcript !== "off") continue;
+            // Saat dijeda, hanya Continue/Lanjut atau Off/Matikan yang diterima.
+            if (paused && command !== "continue" && command !== "off") continue;
 
-            handleCommand(transcript);
+            handleCommand(command);
           }
         };
 
