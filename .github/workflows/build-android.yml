@@ -1,0 +1,51 @@
+name: Build ScrollVoice AI APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "android-app/**"
+      - ".github/workflows/build-android.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ambil kode proyek
+        uses: actions/checkout@v4
+
+      - name: Siapkan Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Siapkan Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Periksa berkas proyek Android
+        run: |
+          if [ ! -f android-app/gradlew ]; then
+            echo "Gradle wrapper belum tersedia."
+            exit 1
+          fi
+          if [ ! -f android-app/settings.gradle ] && [ ! -f android-app/settings.gradle.kts ]; then
+            echo "Konfigurasi proyek Android belum lengkap."
+            exit 1
+          fi
+          chmod +x android-app/gradlew
+
+      - name: Build APK
+        working-directory: android-app
+        run: ./gradlew assembleDebug
+
+      - name: Simpan APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ScrollVoice-AI-APK
+          path: android-app/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error

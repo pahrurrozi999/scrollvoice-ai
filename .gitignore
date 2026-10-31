@@ -1,0 +1,6 @@
+
+# Android generated files
+**/.gradle/
+**/build/
+local.properties
+*.backup
