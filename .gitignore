@@ -4,3 +4,7 @@
 **/build/
 local.properties
 *.backup
+# ScrollVoice release signing files
+*.jks
+*.keystore
+keystore-base64.txt

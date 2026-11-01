@@ -41,13 +41,31 @@ jobs:
           fi
           chmod +x android-app/gradlew
 
-      - name: Build APK
-        working-directory: android-app
-        run: ./gradlew assembleDebug
+            - name: Siapkan keystore release
+                    env:
+                              RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+                                      run: |
+                                                echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/scrollvoice-release.jks"
+                                                          test -s "$RUNNER_TEMP/scrollvoice-release.jks"
 
-      - name: Simpan APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: ScrollVoice-AI-APK
-          path: android-app/app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
+                                                                - name: Build APK release
+                                                                        working-directory: android-app
+                                                                                env:
+                                                                                          RELEASE_STORE_FILE: ${{ runner.temp }}/scrollvoice-release.jks
+                                                                                                    RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+                                                                                                              RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+                                                                                                                        RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+                                                                                                                                run: ./gradlew assembleRelease
+
+                                                                                                                                      - name: Simpan APK release
+                                                                                                                                              uses: actions/upload-artifact@v4
+                                                                                                                                                      with:
+                                                                                                                                                                name: ScrollVoice-AI-Release-APK
+                                                                                                                                                                          path: android-app/app/build/outputs/apk/release/*.apk
+                                                                                                                                                                                    if-no-files-found: error
+            - name: Simpan APK release
+                    uses: actions/upload-artifact@v4
+                            with:
+                                      name: ScrollVoice-AI-Release-APK
+                                                path: android-app/app/build/outputs/apk/release/*.apk
+                                                          if-no-files-found: error
