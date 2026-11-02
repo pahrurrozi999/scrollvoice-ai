@@ -41,7 +41,7 @@ jobs:
           fi
           chmod +x android-app/gradlew
 
-            - name: Siapkan keystore release
+      - name: Siapkan keystore release
                     env:
                               RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
                                       run: |
